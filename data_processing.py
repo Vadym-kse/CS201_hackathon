@@ -1,5 +1,4 @@
 import json
-
 def search(title, name, cpv):
     with open("tenders.json", "r") as f:
         tenders = json.load(f)
