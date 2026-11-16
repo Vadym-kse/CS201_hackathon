@@ -68,9 +68,9 @@ def create_graph_2(title, desc, cpv):
     ).clip(lower=0)
   
     def classify(deviation):
-        if deviation <= 10:
+        if deviation <= 20:
             return "Нормальна ціна"
-        elif deviation <= 30:
+        elif deviation <= 50:
             return "Помірне відхилення"
         else:
             return "Аномальне відхилення"
