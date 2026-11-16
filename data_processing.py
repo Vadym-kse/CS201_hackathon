@@ -5,7 +5,32 @@ def search(title, desc, cpv, for_graph):
     with open("tenders.json", "r", encoding="UTF-8") as f:
         tenders = json.load(f)
 
-    filtered_tenders = [item for item in tenders if (item.get("cpv") == cpv or cpv == "0") and ((title == "0" and desc.lower().strip() in item["desc"].lower()) or (desc == "0" and title.lower().strip() in item["title"].lower()) or (title.lower().strip() in item["title"].lower() or desc.lower().strip() in item["desc"].lower()))]
+    t_clean = title.lower().strip()
+    d_clean = desc.lower().strip()
+
+    filtered_tenders = []
+    for item in tenders:
+        if cpv != "0" and item.get("cpv") != cpv:
+            continue
+
+        item_title = item["title"].lower()
+        item_desc = item["desc"].lower()
+
+        if title == "0" and desc == "0":
+            text_cond = True
+        elif title == "0":
+            text_cond = d_clean in item_desc
+        elif desc == "0":
+            text_cond = t_clean in item_title
+        else:
+            text_cond = (t_clean in item_title) or (d_clean in item_desc)
+
+        if text_cond:
+            filtered_tenders.append(item)
+
+    if not filtered_tenders:
+        return None
+
     pd_searched = pd.DataFrame(filtered_tenders)
     pd_searched["unit_price"] = pd_searched["amount"] / pd_searched["qty"]
     median_price = pd_searched["unit_price"].median()
