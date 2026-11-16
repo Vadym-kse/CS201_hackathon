@@ -1,3 +1,4 @@
+
 import os
 import json
 import time
@@ -12,7 +13,6 @@ default_settings = {
     "title": "0",
     "name": "0",
     "cpv": "0",
-    "threshold": 1.5,
     "amount": 5000,
 }
 
@@ -91,7 +91,7 @@ while True:
         print('Щоб не шукати за назвою товару, введіть нову назву "0"')
 
         print("change_cpv {НОВИЙ CPV} - змінити CPV, за яким здійснюється пошук.")
-        print('Щоб не шукати за назвою товару, введіть новий CPV "0"')
+        print('Щоб не шукати за CPV, введіть новий CPV "0"')
         print()
 
         print("check - вивести поточні налаштування пошуку.")
@@ -130,9 +130,7 @@ while True:
         print(f'title = "{settings["title"]}"')
         print(f'name = "{settings["name"]}"')
         print(f'cpv = "{settings["cpv"]}"')
-        print(f'threshold = {settings["threshold"]}')
         print(f'amount = {settings["amount"]}')
-
 
     elif command == "search":
         print("Розпочато пошук...")
@@ -141,16 +139,27 @@ while True:
         try:
             start_time = time.perf_counter()
 
-            new_results = search(
+            # Отримуємо всі знайдені тендери та медіану
+            searched_df, average_price, median_price = search(
                 settings["title"],
                 settings["name"],
-                settings["cpv"]
+                settings["cpv"],
+                True
             )
 
-            elapsed = round(time.perf_counter() - start_time, 2)
+            # Отримуємо аномальні тендери
+            anomalous_tenders = search(
+                settings["title"],
+                settings["name"],
+                settings["cpv"],
+                False
+            )
 
-            # Замінюємо результати лише після успішного пошуку
+            # Зберігаємо всі тендери для команди show
+            new_results = searched_df.to_dict(orient="records")
             search_results = new_results
+
+            elapsed = round(time.perf_counter() - start_time, 2)
 
             print("Пошук завершено.")
             print(f"Операція тривала {elapsed:.2f} секунд.")
@@ -165,15 +174,38 @@ while True:
                 print(f"Сума: {tender.get('amount', 'Невідомо')} {tender.get('currency', '')}")
                 print()
 
+            print("Аномальні тендери:")
+
+            anomalous_ids = {
+                tender.get("id")
+                for tender in anomalous_tenders
+            }
+
+            anomalies_found = False
+
+            for number, tender in enumerate(search_results, start=1):
+                if tender.get("id") in anomalous_ids:
+                    anomalies_found = True
+
+                    unit_price = tender["amount"] / tender["qty"]
+                    deviation_ratio = unit_price / median_price
+
+                    print(
+                        f"[{number}] - ціна на одиницю товару у "
+                        f"{deviation_ratio:.2f} рази вище за медіану."
+                    )
+
+            if not anomalies_found:
+                print("Аномальних тендерів не знайдено.")
+
         except FileNotFoundError:
             print("Помилка: файл tenders.json не знайдено.")
 
         except json.JSONDecodeError:
             print("Помилка: файл tenders.json містить некоректний JSON.")
 
-        except (OSError, KeyError, TypeError) as error:
+        except (OSError, KeyError, TypeError, ZeroDivisionError) as error:
             print(f"Помилка під час пошуку: {error}")
-
 
     elif command == "update_database":
         print("Ця операція може зайняти довгий час та видалить стару базу даних з тендерами.")
