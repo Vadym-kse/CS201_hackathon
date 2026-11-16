@@ -1,6 +1,6 @@
-
 import os
 import json
+import time
 
 from API import update_database
 from data_processing import search
@@ -54,8 +54,9 @@ print()
 print(separator)
 
 
-search_results = []
-analysis_mode = False
+# None означає, що успішного пошуку ще не було
+search_results = None
+
 
 # Основний цикл CLI
 while True:
@@ -96,7 +97,8 @@ while True:
         print("check - вивести поточні налаштування пошуку.")
         print()
 
-        print("search - провести пошук за вже заданими параметрами, вивести результати пошуку, перевести програму в режим АНАЛІЗУ.")
+        print("search - провести пошук за вже заданими параметрами та вивести результати пошуку.")
+        print("show {НОМЕР ТЕНДЕРА} - вивести детальну інформацію про тендер з останнього пошуку.")
 
     elif command == "exit":
         print(separator)
@@ -136,19 +138,22 @@ while True:
         print("Розпочато пошук...")
         print()
 
-        search_results = []
-        analysis_mode = False
-
         try:
-            search_results = search(
+            start_time = time.perf_counter()
+
+            new_results = search(
                 settings["title"],
                 settings["name"],
                 settings["cpv"]
             )
 
-            analysis_mode = True
+            elapsed = round(time.perf_counter() - start_time, 2)
+
+            # Замінюємо результати лише після успішного пошуку
+            search_results = new_results
 
             print("Пошук завершено.")
+            print(f"Операція тривала {elapsed:.2f} секунд.")
             print()
             print(f"Знайдено тендерів: {len(search_results)}")
             print()
@@ -170,7 +175,6 @@ while True:
             print(f"Помилка під час пошуку: {error}")
 
 
-
     elif command == "update_database":
         print("Ця операція може зайняти довгий час та видалить стару базу даних з тендерами.")
 
@@ -188,7 +192,6 @@ while True:
         else:
             print("Невідома відповідь. Оновлення бази даних скасовано.")
 
-
     elif command == "change_amount":
         try:
             new_amount = int(argument)
@@ -202,13 +205,15 @@ while True:
         except ValueError:
             print("Помилка: введіть ціле число. Наприклад: change_amount 5000")
 
-
     elif command == "show":
-        if not analysis_mode:
+        if search_results is None:
             print("Спочатку виконайте команду search.")
 
         elif not argument:
             print("Помилка: вкажіть номер тендера. Наприклад: show 3")
+
+        elif not search_results:
+            print("Останній пошук не знайшов жодного тендера.")
 
         else:
             try:
@@ -248,10 +253,6 @@ while True:
 
             except ValueError:
                 print("Помилка: номер тендера повинен бути цілим числом.")
-
-
-    elif command == "end_analysis":
-        print("Режим аналізу поки не реалізований.")
 
     else:
         print("Невідома команда. Введіть help.")
