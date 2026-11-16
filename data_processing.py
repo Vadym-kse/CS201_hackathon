@@ -1,7 +1,7 @@
 import json
 import pandas as pd
 
-def search(title, desc, cpv, for_graph):
+def search(title, desc, cpv,for_graph):
     with open("tenders.json", "r", encoding="UTF-8") as f:
         tenders = json.load(f)
 
@@ -39,4 +39,4 @@ def search(title, desc, cpv, for_graph):
         average_price = pd_searched["unit_price"].mean()
         return pd_searched, average_price, median_price
     else:
-        return pd_searched[pd_searched["unit_price"] > median_price*1.75].to_dict(orient="records")
+        return pd_searched[pd_searched["unit_price"] > median_price*1.5].to_dict(orient="records")
