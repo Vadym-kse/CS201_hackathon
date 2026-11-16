@@ -13,4 +13,6 @@ def search(title, desc, cpv, for_graph):
     if for_graph:
         average_price = pd_searched["unit_price"].mean()
         return pd_searched, average_price, median_price
+    else:
+        return [item for item in filtered_tenders if item["unit_price"] > median_price]
 
