@@ -47,8 +47,9 @@ def create_graph_1(title, desc, cpv):
 
     return fig
 
-graph = create_graph_1("Олія", "Олія", "15420000-8")
-if graph is not None:
-    graph.show()
-else:
-    pass
+# graph = create_graph_1("Олія", "Олія", "15420000-8")
+# if graph is not None:
+#     graph.show()
+# else:
+#     pass
+
