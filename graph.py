@@ -36,3 +36,7 @@ def create_graph_1(title, desc, cpv):
     )
 
     return fig
+
+graph = create_graph_1("Ноутбук", "Ноутбук", "30210000-4")
+if graph is not None:
+    graph.show()
