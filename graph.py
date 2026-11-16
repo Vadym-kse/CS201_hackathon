@@ -47,11 +47,10 @@ def create_graph_1(title, desc, cpv):
 
     return fig
 
-# graph = create_graph_1("Олія", "Олія", "15420000-8")
-# if graph is not None:
-#     graph.show()
-# else:
-#     pass
+
+
+
+
 
 def create_graph_2(title, desc, cpv):
     df, mean_price, median_price = data_processing.search(title, desc, cpv, True)
@@ -128,10 +127,9 @@ def create_graph_2(title, desc, cpv):
 
     return fig
 
-# graph_2 = create_graph_2("Олія", "Олія", "15420000-8")
 
-# if graph_2 is not None:
-#     graph_2.show()
+
+
 
 def create_graph_3(cpv):
     with open("tenders.json", "r", encoding="utf-8") as f:
@@ -211,8 +209,3 @@ def create_graph_3(cpv):
 )
 
     return fig
-
-graph_3 = create_graph_3("30210000-4")
-
-if graph_3 is not None:
-    graph_3.show()
