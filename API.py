@@ -2,12 +2,14 @@ import json
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 OUTPUT_FILE = "tenders.json"
 PROGRESS_STEP = 100
 BASE_URL = "https://public-api.prozorro.gov.ua/api/2.5/tenders"
 EXCLUDED_IDS = {"", "99999999", "88888888"}
-MAX_WORKERS = 8
+MAX_WORKERS = 5
 
 
 def is_valid_numeric(value):
@@ -90,6 +92,9 @@ def parse_tender(session, tender_uuid):
 def update_database(target_amount):
     start_time = time.perf_counter()
     session = requests.Session()
+    retry = Retry(total=5, backoff_factor=1.0, status_forcelist=(429, 500, 502, 503, 504))
+    session.mount("https://", HTTPAdapter(max_retries=retry))
+
     collected = []
     last_reported = 0
 
@@ -103,8 +108,7 @@ def update_database(target_amount):
                 feed_resp = session.get(next_url, timeout=15)
                 feed_resp.raise_for_status()
                 feed_json = feed_resp.json()
-            except (requests.RequestException, ValueError) as e:
-                print(f"[Помилка стрічки Prozorro]: {e}. Повтор через 2 сек...")
+            except (requests.RequestException, ValueError):
                 time.sleep(2)
                 continue
 
