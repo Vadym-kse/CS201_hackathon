@@ -60,13 +60,13 @@ def create_graph_2(title, desc, cpv):
 
     df["unit_price"] = df["amount"] / df["qty"]
 
+    if median_price <= 0:
+            return None
+
     df["deviation"] = (
     (df["unit_price"] - median_price) / median_price * 100
     ).clip(lower=0)
-
-    if median_price <= 0:
-        return None
-
+  
     def classify(deviation):
         if deviation <= 10:
             return "Нормальна ціна"
