@@ -6,7 +6,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-TARGET_AMOUNT = 500
+TARGET_AMOUNT = 5000
 OUTPUT_FILE = "tenders.json"
 PROGRESS_STEP = 100
 
