@@ -2,12 +2,17 @@ import json
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import data_processing
 
-def load_tenders(path):
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+tenders = data_processing.search()
 
-    if isinstance(data, dict):
-        return data.get("tenders", [data])
+def create_graph_1(tenders):
+    df = pd.DataFrame(tenders)
+
+    if df.empty:
+        return None
     
-    return data
+    df["unit_price"] = df["amount"] / df["qty"]
+    mean_price = df["unit_price"].mean()
+    median_price = df["unit_price"].median()
+    
