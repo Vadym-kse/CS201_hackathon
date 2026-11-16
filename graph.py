@@ -35,8 +35,20 @@ def create_graph_1(title, desc, cpv):
         line_width=3
     )
 
+    fig.update_traces(
+    marker_color="#6495ED",
+    marker_line_color="black",
+    marker_line_width=1.2
+    )
+
+    fig.update_layout(
+        bargap=0.15
+    )
+
     return fig
 
-graph = create_graph_1("Ноутбук", "Ноутбук", "30210000-4")
+graph = create_graph_1("Олія", "Олія", "15420000-8")
 if graph is not None:
     graph.show()
+else:
+    pass
