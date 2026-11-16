@@ -5,6 +5,7 @@ import time
 
 from API import update_database
 from data_processing import search
+from graph import create_graph_1, create_graph_2, create_graph_3
 
 
 separator = "=" * 89
@@ -57,6 +58,9 @@ print(separator)
 # None означає, що успішного пошуку ще не було
 search_results = None
 
+# Параметри останнього успішного пошуку
+last_search_settings = None
+
 
 # Основний цикл CLI
 while True:
@@ -99,6 +103,15 @@ while True:
 
         print("search - провести пошук за вже заданими параметрами та вивести результати пошуку.")
         print("show {НОМЕР ТЕНДЕРА} - вивести детальну інформацію про тендер з останнього пошуку.")
+        print()
+
+        print("КОМАНДИ ГРАФІКІВ:")
+        print()
+        print("graph_1 - побудувати гістограму розподілу цін за одиницю товару.")
+        print("graph_2 - побудувати кругову діаграму розподілу тендерів за відхиленням цін.")
+        print("graph_3 {CPV} - побудувати графік топ-10 найдорожчих товарів за CPV.")
+        print("Якщо CPV задано під час останнього пошуку, для graph_3 його можна не вказувати.")
+        print("Перед побудовою графіків необхідно виконати команду search.")
 
     elif command == "exit":
         print(separator)
@@ -158,6 +171,13 @@ while True:
             # Зберігаємо всі тендери для команди show
             new_results = searched_df.to_dict(orient="records")
             search_results = new_results
+
+            # Запам'ятовуємо параметри успішного пошуку
+            last_search_settings = {
+                "title": settings["title"],
+                "name": settings["name"],
+                "cpv": settings["cpv"]
+            }
 
             elapsed = round(time.perf_counter() - start_time, 2)
 
@@ -285,6 +305,101 @@ while True:
 
             except ValueError:
                 print("Помилка: номер тендера повинен бути цілим числом.")
+
+    elif command == "graph_1":
+        if search_results is None:
+            print("Спочатку виконайте команду search.")
+
+        elif not search_results:
+            print("Останній пошук не знайшов жодного тендера.")
+
+        else:
+            try:
+                print("Створення графіка розподілу цін...")
+
+                fig = create_graph_1(
+                    last_search_settings["title"],
+                    last_search_settings["name"],
+                    last_search_settings["cpv"]
+                )
+
+                if fig is None:
+                    print("Недостатньо даних для побудови графіка.")
+                else:
+                    fig.write_html("graph_1.html", auto_open=True)
+                    print("Графік успішно створено.")
+
+            except (OSError, ValueError, KeyError, TypeError, ZeroDivisionError) as error:
+                print(f"Помилка під час створення графіка: {error}")
+
+    elif command == "graph_2":
+        if search_results is None:
+            print("Спочатку виконайте команду search.")
+
+        elif not search_results:
+            print("Останній пошук не знайшов жодного тендера.")
+
+        else:
+            try:
+                print("Створення графіка відхилень цін...")
+
+                fig = create_graph_2(
+                    last_search_settings["title"],
+                    last_search_settings["name"],
+                    last_search_settings["cpv"]
+                )
+
+                if fig is None:
+                    print("Недостатньо даних для побудови графіка.")
+                else:
+                    fig.write_html("graph_2.html", auto_open=True)
+                    print("Графік успішно створено.")
+
+            except (OSError, ValueError, KeyError, TypeError, ZeroDivisionError) as error:
+                print(f"Помилка під час створення графіка: {error}")
+
+    elif command == "graph_3":
+        if search_results is None:
+            print("Спочатку виконайте команду search.")
+
+        elif not search_results:
+            print("Останній пошук не знайшов жодного тендера.")
+
+        else:
+            cpv_for_graph = argument if argument else last_search_settings["cpv"]
+
+            if cpv_for_graph == "0":
+                print("Помилка: вкажіть CPV. Наприклад: graph_3 30213100-6")
+
+            else:
+                try:
+                    # Перевіряємо наявність тендерів із таким CPV
+                    with open("tenders.json", "r", encoding="utf-8") as file:
+                        tenders = json.load(file)
+
+                    matching_tenders = [
+                        tender for tender in tenders
+                        if tender.get("cpv") == cpv_for_graph
+                        and isinstance(tender.get("qty"), (int, float))
+                        and tender["qty"] > 0
+                    ]
+
+                    if not matching_tenders:
+                        print(f"Не знайдено тендерів із CPV {cpv_for_graph}.")
+
+                    else:
+                        print(f"Створення графіка топ-10 для CPV {cpv_for_graph}...")
+
+                        fig = create_graph_3(cpv_for_graph)
+
+                        if fig is None:
+                            print("Недостатньо даних для побудови графіка.")
+                        else:
+                            fig.write_html("graph_3.html", auto_open=True)
+                            print("Графік успішно створено.")
+
+                except (OSError, ValueError, KeyError, TypeError, ZeroDivisionError, json.JSONDecodeError) as error:
+                    print(f"Помилка під час створення графіка: {error}")
 
     else:
         print("Невідома команда. Введіть help.")
