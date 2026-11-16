@@ -6,16 +6,14 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
-TARGET_AMOUNT = 5000
 OUTPUT_FILE = "tenders.json"
 PROGRESS_STEP = 100
-
 BASE_URL = "https://public-api.prozorro.gov.ua/api/2.5/tenders"
 EXCLUDED_IDS = {"", "99999999", "88888888"}
 MAX_WORKERS = 8
 
 
-def update_database(target_amount: int = TARGET_AMOUNT, output_path: str = OUTPUT_FILE) -> float:
+def update_database(target_amount: int) -> float:
     def create_session() -> requests.Session:
         session = requests.Session()
         session.headers.update({"User-Agent": "ProzorroHackathonClient/1.0"})
@@ -112,7 +110,7 @@ def update_database(target_amount: int = TARGET_AMOUNT, output_path: str = OUTPU
         }
 
     def save_to_file(records: list[dict]) -> None:
-        with open(output_path, "w", encoding="utf-8") as f:
+        with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
             json.dump(records, f, ensure_ascii=False, indent=2)
 
     start_time = time.perf_counter()
@@ -170,10 +168,6 @@ def update_database(target_amount: int = TARGET_AMOUNT, output_path: str = OUTPU
 
     save_to_file(collected[:target_amount])
     elapsed = round(time.perf_counter() - start_time, 2)
-    print(f"\nІнформацію про тендери ({len(collected)} шт.) успішно завантажено у файл {output_path}.")
+    print(f"\nІнформацію про тендери ({len(collected)} шт.) успішно завантажено у файл {OUTPUT_FILE}.")
     print(f"Операція тривала {elapsed} секунд.")
     return elapsed
-
-
-if __name__ == "__main__":
-    update_database()
